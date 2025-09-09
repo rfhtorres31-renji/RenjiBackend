@@ -1,0 +1,171 @@
+[
+  {
+    "ContainingType": "Program\u002B\u003C\u003Ec",
+    "Method": "\u003C\u003CMain\u003E$\u003Eb__0_4",
+    "RelativePath": "",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.String",
+        "MediaTypes": [
+          "text/plain"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "renjibackend.APIControllers.ActionPlanController",
+    "Method": "GetActionPlan",
+    "RelativePath": "api/actionplan/get",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "renjibackend.APIControllers.ActionPlanController",
+    "Method": "GetActionPlanChart",
+    "RelativePath": "api/actionplan/get/chart",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "renjibackend.APIControllers.ActionPlanController",
+    "Method": "GetActionPlanKPI",
+    "RelativePath": "api/actionplan/get/kpi",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "renjibackend.APIControllers.ActionPlanController",
+    "Method": "PostActionPlan",
+    "RelativePath": "api/actionplan/post",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "actionPlan",
+        "Type": "renjibackend.DTO.NewActionPlan\u002BActionPlanDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "renjibackend.APIControllers.ActionPlanController",
+    "Method": "PutActionPlan",
+    "RelativePath": "api/actionplan/put",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "actionID",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "incidentReportID",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "updateData",
+        "Type": "renjibackend.DTO.UpdateActionPlanDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "renjibackend.APIControllers.AuthController",
+    "Method": "Login",
+    "RelativePath": "api/auth/login",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "renjibackend.DTO.LoginRequest",
+        "IsRequired": true
+      },
+      {
+        "Name": "rememberMe",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "renjibackend.APIControllers.AuthController",
+    "Method": "Register",
+    "RelativePath": "api/auth/register",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "renjibackend.DTO.RegisterRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "renjibackend.APIControllers.IncidentReportsController",
+    "Method": "GetReports",
+    "RelativePath": "api/reports/get",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userID",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "renjibackend.APIControllers.IncidentReportsController",
+    "Method": "PostNewReport",
+    "RelativePath": "api/reports/post",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "report",
+        "Type": "renjibackend.DTO.NewReport",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "renjibackend.APIControllers.IncidentReportsController",
+    "Method": "GetSummaryReports_2",
+    "RelativePath": "api/reports/summaryreports-2",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  }
+]
