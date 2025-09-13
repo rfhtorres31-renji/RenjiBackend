@@ -27,11 +27,11 @@ namespace renjibackend.APIControllers
     public class IncidentReportsController : ControllerBase
     {
 
-        private readonly RenjiDbContext db;
+        private readonly IRSDbContext db;
         private Response response = new Response();
         private readonly Caching cache;
 
-        public IncidentReportsController(RenjiDbContext _db, Caching _cache)
+        public IncidentReportsController(IRSDbContext _db, Caching _cache)
         {
             this.db = _db;
             this.cache = _cache;

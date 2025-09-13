@@ -27,7 +27,7 @@ builder.Services.AddCors(options =>
                       });
 });
 
-builder.Services.AddDbContext<RenjiDbContext>(options =>
+builder.Services.AddDbContext<IRSDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
            .EnableSensitiveDataLogging()
            .LogTo(Console.WriteLine, LogLevel.Information));

@@ -16,11 +16,11 @@ namespace renjibackend.APIControllers
     [Route("api/actionplan")]
     public class ActionPlanController : ControllerBase
     {
-        private readonly RenjiDbContext db;
+        private readonly IRSDbContext db;
         private Response response = new Response();
         private readonly Caching cache;
 
-        public ActionPlanController(RenjiDbContext _db, Caching _cache)
+        public ActionPlanController(IRSDbContext _db, Caching _cache)
         {
             this.db = _db;
             this.cache = _cache;
@@ -238,97 +238,15 @@ namespace renjibackend.APIControllers
         public async Task<IActionResult> GetActionPlanChart()
         {
 
-            //=============================== For Donut Chart ====================================//
-            var pendingActionPlans = await db.IncidentReports
-                                          .Include(i => i.ActionPlan)
-                                          .Include(i => i.Department)
-                                          .Include(i => i.Accident)
-                                          .Where(u => u.ActionPlan.Status != 30).ToListAsync();
+            object[] result = await Task.WhenAll(cache.GetActionPlanChartDonutChart(), cache.GetActionPlanChartBarChart(), cache.GetActionPlanChartLineChart());
 
-            int totalPendingPlans = pendingActionPlans.Count();
-
-            if (pendingActionPlans == null)
-            {
-                response.success = false;
-                response.message = "Bad Request";
-                return BadRequest(response);
-            }
-
-            var completedActionPlans = await db.IncidentReports
-                                          .Include(i => i.ActionPlan)
-                                          .Include(i => i.Department)
-                                          .Include(i => i.Accident)
-                                          .Where(u => u.ActionPlan.Status == 30).ToListAsync();
-
-
-            int totalCompletedPlans = completedActionPlans.Count();
-            Debug.WriteLine($"Total Completed Plans: {totalCompletedPlans}");
-
-            if (completedActionPlans == null)
-            {
-                response.success = false;
-                response.message = "Bad Request";
-                return BadRequest(response);
-            }
-
-            int totalActionPlans = db.IncidentReports
-                                  .Include(i => i.ActionPlan)
-                                  .Include(i => i.Department)
-                                  .Include(i => i.Accident).Count();
-
-
-            Debug.WriteLine($"Total Action Plans: {totalActionPlans}");
-
-            double percentagePendingPlans = Math.Round(((double)totalPendingPlans / totalActionPlans) * 100, 2);
-            double percentageCompletedPlans = Math.Round(((double)totalCompletedPlans / totalActionPlans) * 100, 2);
-
-            Debug.WriteLine($"percentageCompletedPlans: {percentageCompletedPlans}");
-
-            double[] donutChartArray = { percentageCompletedPlans, percentagePendingPlans };
-
-            //======================================================================================================//
-
-
-            //======================= For Bar Chart ==========================//
-
-            var aggregagatedReport1 = (from ap in db.ActionPlans
-                                       join mt in db.MaintenanceTeams
-                                       on ap.MaintenanceStaffId equals mt.Id
-                                       group ap by mt.Name into g
-                                       select new
-                                       {
-                                           x = g.Count(),
-                                           y = g.Key,
-                                       }).ToArray();
-
-
-
-            var xLabel = aggregagatedReport1.Select(n => n.x).ToArray();
-            var yLabel = aggregagatedReport1.Select(n => n.y).ToArray();
-
-            //================================================================//
-
-            // =================== Line Chart ============================= //
-
-            var completedOverTime = db.ActionPlans
-                .Where(a => a.CompletedDate != null && a.Status == 30)
-                .GroupBy(a => a.CompletedDate.Value.Date)
-                .Select(g => new { date = g.Key, completed = g.Count() })
-                .OrderBy(m => m.date);
-
-            var pendingOverTime = db.ActionPlans
-                .Where(a => a.CompletedDate == null && a.Status != 30)
-                .GroupBy(a => a.DueDate.Date)
-                .Select(g => new { date = g.Key, pending = g.Count() })
-                .OrderBy(m => m.date);
-
-
-            // ============================================================= //
-
+            var donutChartObj = result[0];
+            var barChartObj = result[1];
+            var lineChartObj = result[2];
 
             response.success = true;
             response.message = "Ok";
-            response.details = new { donutChart = donutChartArray, barChart = new { xLabel = xLabel, yLabel = yLabel }, lineChart = new { completedOverTime = completedOverTime, pendingOverTime = pendingOverTime } };
+            response.details = new { donutChart = donutChartObj, barChart = barChartObj, lineChart = lineChartObj };
 
             return Ok(response);
         }

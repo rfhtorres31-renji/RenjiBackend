@@ -29,6 +29,8 @@ public partial class ActionPlan
 
     public DateTime? CompletedDate { get; set; }
 
+    public bool? IsOverDueNotified { get; set; }
+
     public virtual ICollection<IncidentReport> IncidentReports { get; set; } = new List<IncidentReport>();
 
     public virtual MaintenanceTeam MaintenanceStaff { get; set; } = null!;

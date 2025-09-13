@@ -20,12 +20,12 @@ namespace renjibackend.APIControllers
     public class AuthController : ControllerBase
     {
 
-       private readonly RenjiDbContext db;
+       private readonly IRSDbContext db;
        private readonly PasswordHashing passwordService;
        private Response response = new Response();
        private readonly TokenGenerator generateToken;
 
-       public AuthController(RenjiDbContext _db,
+       public AuthController(IRSDbContext _db,
                              PasswordHashing _passwordService,
                              TokenGenerator _generateToken)
        {

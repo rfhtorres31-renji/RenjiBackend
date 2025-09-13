@@ -43,10 +43,10 @@ namespace renjibackend.Services
         }
 
 
-        private readonly RenjiDbContext db;
+        private readonly IRSDbContext db;
         private readonly IMemoryCache cache;
 
-        public Caching(IMemoryCache _cache, RenjiDbContext _db)
+        public Caching(IMemoryCache _cache, IRSDbContext _db)
         {
             this.db = _db;
             this.cache = _cache;
@@ -60,7 +60,7 @@ namespace renjibackend.Services
                 return cachedData;
             }
 
-            using (var dbContext = new RenjiDbContext())
+            using (var dbContext = new IRSDbContext())
             {
                 var reports = await db.IncidentReports.Select(n => new {
                     ID = n.Id,
@@ -96,7 +96,7 @@ namespace renjibackend.Services
                 return cachedData;
             }
 
-            using (var dbContext = new RenjiDbContext())
+            using (var dbContext = new IRSDbContext())
             {
                 var query1 = from ir in dbContext.IncidentReports
                              join a in dbContext.Accidents
@@ -123,7 +123,7 @@ namespace renjibackend.Services
                 return cachedData;
             }
 
-            using (var dbContext = new RenjiDbContext())
+            using (var dbContext = new IRSDbContext())
             {
                 var totalCount = dbContext.IncidentReports.Count();
 
@@ -189,6 +189,129 @@ namespace renjibackend.Services
 
             return query;
         }
+
+
+        public async Task<object> GetActionPlanChartDonutChart()
+        {
+
+            if (cache.TryGetValue("actionPlanDonutChart", out List<object> cachedData))
+            {
+                return cachedData;
+            }
+
+
+            using (var db = new IRSDbContext())
+            {
+                var pendingActionPlans = await db.IncidentReports
+                                  .Include(i => i.ActionPlan)
+                                  .Include(i => i.Department)
+                                  .Include(i => i.Accident)
+                                  .Where(u => u.ActionPlan.Status != 30).ToListAsync();
+
+                int totalPendingPlans = pendingActionPlans.Count();
+
+                var completedActionPlans = await db.IncidentReports
+                                              .Include(i => i.ActionPlan)
+                                              .Include(i => i.Department)
+                                              .Include(i => i.Accident)
+                                              .Where(u => u.ActionPlan.Status == 30).ToListAsync();
+
+
+                int totalCompletedPlans = completedActionPlans.Count();
+
+
+                int totalActionPlans = db.IncidentReports
+                                      .Include(i => i.ActionPlan)
+                                      .Include(i => i.Department)
+                                      .Include(i => i.Accident).Count();
+
+
+
+                double percentagePendingPlans = Math.Round(((double)totalPendingPlans / totalActionPlans) * 100, 2);
+                double percentageCompletedPlans = Math.Round(((double)totalCompletedPlans / totalActionPlans) * 100, 2);
+
+                var donutChartArray = new[] { percentageCompletedPlans, percentagePendingPlans };
+
+
+                cache.Set("actionPlanDonutChart", donutChartArray, TimeSpan.FromSeconds(30));
+
+                return donutChartArray;
+            }
+
+        }
+
+        public async Task<object> GetActionPlanChartBarChart()
+        {  
+
+            if (cache.TryGetValue("actionPlanBarChart", out List<object> cachedData))
+            {
+                return cachedData;
+            }
+
+            using (var db = new IRSDbContext())
+            {
+                var aggregatedReport = await (from ap in db.ActionPlans
+                                              join mt in db.MaintenanceTeams
+                                                  on ap.MaintenanceStaffId equals mt.Id
+                                              group ap by mt.Name into g
+                                              select new
+                                              {
+                                                  count = g.Count(),
+                                                  team = g.Key
+                                              }).ToListAsync();
+
+                var barChartObj = new
+                {
+                    xLabel = aggregatedReport.Select(r => r.count).ToArray(),
+                    yLabel = aggregatedReport.Select(r => r.team).ToArray()
+                };
+
+                cache.Set("actionPlanBarChart", barChartObj, TimeSpan.FromSeconds(30));
+
+                return barChartObj;
+            }
+
+
+        }
+
+        public async Task<object> GetActionPlanChartLineChart()
+        {
+
+            if (cache.TryGetValue("actionPlanLineChart", out List<object> cachedData))
+            {
+                return cachedData;
+            }
+
+            using (var db = new IRSDbContext())
+            {
+                var completedOverTime = await db.ActionPlans
+                    .Where(a => a.CompletedDate != null && a.Status == 30)
+                    .GroupBy(a => a.CompletedDate.Value.Date)
+                    .Select(g => new { date = g.Key, completed = g.Count() })
+                    .OrderBy(m => m.date)
+                    .ToListAsync();
+
+                var pendingOverTime = await db.ActionPlans
+                    .Where(a => a.CompletedDate == null && a.Status != 30)
+                    .GroupBy(a => a.DueDate.Date)
+                    .Select(g => new { date = g.Key, pending = g.Count() })
+                    .OrderBy(m => m.date)
+                    .ToListAsync();
+
+                var lineChartObj = new
+                {
+                    completedOverTime,
+                    pendingOverTime
+                };
+
+                cache.Set("actionPlanLineChart", lineChartObj, TimeSpan.FromSeconds(30));
+
+                return lineChartObj;
+            }
+
+
+        }
+
 
 
 
