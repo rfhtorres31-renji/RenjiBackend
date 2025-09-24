@@ -152,6 +152,35 @@ namespace renjibackend.APIControllers
             return Ok(response);
         }
 
+        [HttpGet("incident-detail")]
+        public async Task<IActionResult> IncidentDetail(int incidentID)
+        {
+
+            var incidentRecord = await db.IncidentReports.
+                                 Include(i => i.Accident).
+                                 Where(u => u.Id == incidentID).
+                                 Select(n => new
+                                 {  
+                                    ID = n.Id,
+                                    Title = n.Title,
+                                    Description = n.Description,
+                                    ReportedBy = db.Users.Where(u => u.Id == n.ReportedBy).Select(n=> n.FirstName + " " + n.LastName).FirstOrDefault(),
+                                    ReportedDate = n.ReportedDate.ToLocalTime(),
+                                    Location = n.Location,
+                                    AccidentType = n.Accident.Name,
+                                    Status = n.Status == 10 ? "Open":
+                                             n.Status == 20? "In Progress":
+                                             n.Status == 30? "Resolved": ""                                                                   
+                                 }).ToListAsync();
+                                 
+
+            response.success = true;
+            response.message = "Success";
+            response.details = incidentRecord;
+            return Ok(response);
+        }
+
+
 
     }
 }

@@ -199,21 +199,23 @@ namespace renjibackend.APIControllers
 
             // % Completed on Time
             int totalCompletedPlansOnStatus = db.IncidentReports
-                                          .Include(i => i.ActionPlan)
-                                          .Include(i => i.Department)
-                                          .Include(i => i.Accident)
-                                          .Where(u => u.ActionPlanId != null && u.ActionPlan.Status == 30).Count();
+                                              .Include(i => i.ActionPlan)
+                                              .Include(i => i.Department)
+                                              .Include(i => i.Accident)
+                                              .Where(u => u.ActionPlanId != null && u.ActionPlan.Status == 30).Count();
+
 
             int totalCompletedPlansBeforeDueDate = db.IncidentReports
-                                          .Include(i => i.ActionPlan)
-                                          .Include(i => i.Department)
-                                          .Include(i => i.Accident)
-                                          .Where(u => u.ActionPlanId != null &&
-                                                 u.ActionPlan.Status == 30 &&
-                                                 u.ActionPlan.CompletedDate <= u.ActionPlan.DueDate).Count();
+                                                   .Include(i => i.ActionPlan)
+                                                   .Include(i => i.Department)
+                                                   .Include(i => i.Accident)
+                                                   .Where(u => u.ActionPlanId != null &&
+                                                          u.ActionPlan.Status == 30 &&
+                                                          u.ActionPlan.CompletedDate <= u.ActionPlan.DueDate).Count();
 
-            double percentageOnTime = (totalCompletedPlansBeforeDueDate / totalCompletedPlansOnStatus) * 100;
-            Debug.WriteLine($"Percentage On Time: {percentageOnTime}");
+            double percentageOnTime = ((double)totalCompletedPlansBeforeDueDate / totalCompletedPlansOnStatus) * 100;
+            percentageOnTime = Math.Round(percentageOnTime, 2);
+
 
 
             // Total Action Plans that are in In Progress 
