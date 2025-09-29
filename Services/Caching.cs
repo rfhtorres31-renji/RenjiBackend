@@ -65,8 +65,10 @@ namespace renjibackend.Services
                 var reports = await db.IncidentReports.Select(n => new {
                     ID = n.Id,
                     Type = db.Accidents.Where(u => u.Id == n.AccidentId).Select(n => n.Name).FirstOrDefault(),
+                    Description = n.Description,
                     Location = n.Location,
                     ReportedDate = n.ReportedDate,
+                    ReportedBy = db.Users.Where(u => u.Id == n.ReportedBy).Select(n => n.FirstName + ' ' + n.LastName).FirstOrDefault(),
                     Status = n.Status == 10 ? "Open" :
                      n.Status == 20 ? "In Progress" :
                      n.Status == 30 ? "Resolved" : ""
