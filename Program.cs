@@ -4,10 +4,8 @@ using Microsoft.IdentityModel.Tokens;
 using renjibackend.Data;
 using renjibackend.Services;
 using renjibackend.Utility;
-using System.Diagnostics;
 using System.Text;
-using Newtonsoft.Json;
-using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
+
 
 var builder = WebApplication.CreateBuilder(args); // imports web app framework
 

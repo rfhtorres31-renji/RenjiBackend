@@ -52,7 +52,8 @@ namespace renjibackend.Services
             this.cache = _cache;
         }
 
-        public async Task<object> GetReportsCaching()
+        // Controller for KPI Computations and Incident Reports List
+        public async Task<object> GetIncidentReportsListCaching()
         {
 
             if (cache.TryGetValue("reports", out List<object> cachedData))
@@ -90,6 +91,45 @@ namespace renjibackend.Services
         }
 
 
+        public async Task<object> GetTopIncidentReportsByUsers()
+        {
+            if (cache.TryGetValue("topIncidentReportsByUsers", out List<object> cachedData))
+            {
+                return cachedData;
+            }
+
+            using (IRSDbContext db = new IRSDbContext())
+            {
+
+                var query = await (from ir in db.IncidentReports
+                                   join u in db.Users on ir.ReportedBy equals u.Id
+                                   group ir by u.Id into g
+                                   select new
+                                   {
+                                       Name = db.Users.Where(u => u.Id == g.Key).Select(n =>
+                                          n.FirstName + " " + n.LastName + ", " + db.Departments.Where(u => u.Id == n.DepartmentId).Select(n => n.Name).FirstOrDefault()
+
+                                       ).FirstOrDefault(),
+                                       Count = g.Count()
+                                   }
+                                  ).OrderByDescending(o => o.Count).ToListAsync();
+
+
+                cache.Set("topIncidentReportsByUsers", query, TimeSpan.FromSeconds(30));
+                return query;
+
+            }
+
+        }
+
+
+
+
+
+
+
+
+
         public async Task<object> GetSummaryReportsBarChart_1Caching()
         {
 
@@ -109,6 +149,7 @@ namespace renjibackend.Services
                                  y = g.Key, // Accident Types
                                  x = g.Count() // Total per Accident Types
                              };
+
                 var result1 = await query1.OrderByDescending(x => x.y).ToListAsync();
                 cache.Set("barChart", result1, TimeSpan.FromSeconds(30));
                 return result1;
@@ -125,71 +166,26 @@ namespace renjibackend.Services
                 return cachedData;
             }
 
-            using (var dbContext = new IRSDbContext())
+            using (IRSDbContext db = new IRSDbContext())
             {
-                var totalCount = dbContext.IncidentReports.Count();
+                var totalCount = db.IncidentReports.Count();
 
-                var query2 = from ir in dbContext.IncidentReports
-                             join a in dbContext.Accidents
-                             on ir.AccidentId equals a.Id
-                             group ir by a.Name into g
-                             select new PieChartDto
+                var query = await (from ir in db.IncidentReports
+                             join dep in db.Departments
+                             on ir.DepartmentId equals dep.Id
+                             group ir by dep.Id into g
+                             select new 
                              {
-                                 label = g.Key,
+                                 label = db.Departments.Where(u => u.Id == g.Key).Select(n => n.Name).FirstOrDefault(),
                                  value = g.Count(),
                                  percentage = ((double)g.Count() / totalCount * 100).ToString("0.0") + "%"
-                             };
+                             }).ToListAsync();
 
-                var result2 = await query2.ToListAsync();
 
-                cache.Set("pieChart", result2, TimeSpan.FromSeconds(30));
+                cache.Set("pieChart", query, TimeSpan.FromSeconds(30));
 
-                return result2;
+                return query;
             }
-        }
-
-        public async Task<List<IncidentActionDto>> GetActionPlanCaching()
-        {
-
-            if (cache.TryGetValue("cachedData", out List<IncidentActionDto> cachedData))
-            {
-                return cachedData;
-            }
-
-            var query = await db.IncidentReports
-                              .Include(i => i.ActionPlan)
-                              .Include(i => i.Department)
-                              .Include(i => i.Accident)
-                              .Where(u => u.ActionPlanId != null && u.ActionPlan.Status != 30)
-                              .Select(n => new IncidentActionDto
-                              {
-                                  ActionID = n.ActionPlan != null ? n.ActionPlan.Id : 0,
-                                  IncidentReportID = n.Id,
-                                  ActionDetail = n.ActionPlan != null ? n.ActionPlan.ActionDetail ?? "" : "",
-                                  IncidentReportTitle = n.Title,
-                                  Location = n.Location,
-                                  Priority = n.ActionPlan != null ? n.ActionPlan.Priority == 10 ? "Low" :
-                                           n.ActionPlan.Priority == 20 ? "Moderate" :
-                                           n.ActionPlan.Priority == 30 ? "High" : "" : "",
-                                  DueDate = n.ActionPlan.DueDate,
-                                  ActionType = n.ActionPlan != null ? n.ActionPlan.ActionType == 10 ? "Corrective" :
-                                             n.ActionPlan.ActionType == 20 ? "Preventive" :
-                                             n.ActionPlan.ActionType == 30 ? "Mitigation" :
-                                             n.ActionPlan.ActionType == 40 ? "Containment" :
-                                             n.ActionPlan.ActionType == 50 ? "Monitoring" :
-                                             n.ActionPlan.ActionType == 60 ? "Administrative" : "" : "",
-                                  MaintenanceTeam = n.ActionPlan != null ? db.MaintenanceTeams.Where(u => u.Id == n.ActionPlan.MaintenanceStaffId).Select(n => n.Name).FirstOrDefault() : "",
-                                  AccidentType = n.Accident.Name,
-                                  Status = n.ActionPlan != null ? n.ActionPlan.Status == 10 ? "In Progress" :
-                                                               n.ActionPlan.Status == 20 ? "Pending" :
-                                                               n.ActionPlan.Status == 30 ? "Completed" :
-                                                               n.ActionPlan.Status == 40 ? "Cancelled" : "" : "",
-                              }).ToListAsync();
-
-
-            cache.Set("cachedData", query, TimeSpan.FromSeconds(30));
-
-            return query;
         }
 
 

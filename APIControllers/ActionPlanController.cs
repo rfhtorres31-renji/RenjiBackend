@@ -2,13 +2,14 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using renjibackend.Data;
 using renjibackend.DTO;
 using renjibackend.Models;
+using renjibackend.Services;
 using System.Diagnostics;
 using System.Linq;
-using Newtonsoft.Json;
-using renjibackend.Services;
+using static renjibackend.Services.Caching;
 
 namespace renjibackend.APIControllers
 {
@@ -87,7 +88,35 @@ namespace renjibackend.APIControllers
         [Authorize]
         public async Task<IActionResult> GetActionPlan()
         {
-            var query = await cache.GetActionPlanCaching();
+                  var query = await db.IncidentReports
+                              .Include(i => i.ActionPlan)
+                              .Include(i => i.Department)
+                              .Include(i => i.Accident)
+                              .Where(u => u.ActionPlanId != null && u.ActionPlan.Status != 30)
+                              .Select(n => new IncidentActionDto
+                              {
+                                  ActionID = n.ActionPlan != null ? n.ActionPlan.Id : 0,
+                                  IncidentReportID = n.Id,
+                                  ActionDetail = n.ActionPlan != null ? n.ActionPlan.ActionDetail ?? "" : "",
+                                  IncidentReportTitle = n.Title,
+                                  Location = n.Location,
+                                  Priority = n.ActionPlan != null ? n.ActionPlan.Priority == 10 ? "Low" :
+                                           n.ActionPlan.Priority == 20 ? "Moderate" :
+                                           n.ActionPlan.Priority == 30 ? "High" : "" : "",
+                                  DueDate = n.ActionPlan.DueDate,
+                                  ActionType = n.ActionPlan != null ? n.ActionPlan.ActionType == 10 ? "Corrective" :
+                                             n.ActionPlan.ActionType == 20 ? "Preventive" :
+                                             n.ActionPlan.ActionType == 30 ? "Mitigation" :
+                                             n.ActionPlan.ActionType == 40 ? "Containment" :
+                                             n.ActionPlan.ActionType == 50 ? "Monitoring" :
+                                             n.ActionPlan.ActionType == 60 ? "Administrative" : "" : "",
+                                  MaintenanceTeam = n.ActionPlan != null ? db.MaintenanceTeams.Where(u => u.Id == n.ActionPlan.MaintenanceStaffId).Select(n => n.Name).FirstOrDefault() : "",
+                                  AccidentType = n.Accident.Name,
+                                  Status = n.ActionPlan != null ? n.ActionPlan.Status == 10 ? "In Progress" :
+                                                               n.ActionPlan.Status == 20 ? "Pending" :
+                                                               n.ActionPlan.Status == 30 ? "Completed" :
+                                                               n.ActionPlan.Status == 40 ? "Cancelled" : "" : "",
+                              }).ToListAsync();
 
             response.success = true;
             response.message = "Successfully Retrieved Records";
