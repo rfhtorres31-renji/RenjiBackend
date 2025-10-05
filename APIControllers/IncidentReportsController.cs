@@ -100,16 +100,17 @@ namespace renjibackend.APIControllers
         {
             // Runs three functions in parallel
             // This returns an object array with the awaited results
-            object[] result = await Task.WhenAll(cache.GetIncidentReportsListCaching(), cache.GetSummaryReportsBarChart_1Caching(), cache.GetSummaryReportsPieChart_2Caching(), cache.GetTopIncidentReportsByUsers());
+            object[] result = await Task.WhenAll(cache.GetIncidentReportsListCaching(), cache.GetSummaryReportsBarChart_1Caching(), cache.GetSummaryReportsPieChart_2Caching(), cache.GetTopIncidentReportsByUsers(), cache.GetTopUsersbyReports());
 
             var report =  result[0]; 
             var result1 = result[1]; 
             var result2 = result[2];
             var result3 = result[3];
+            var result4 = result[4];
 
             response.success = true;
             response.message = "Success";
-            response.details = new { incidentReports = report, barChart = result1, pieChart = result2, incidentReportsByUsers = result3};
+            response.details = new { incidentReports = report, barChart = result1, pieChart = result2, incidentReportsByUsers = result3, topUsersbyReports = result4};
 
             return Ok(response);
         }

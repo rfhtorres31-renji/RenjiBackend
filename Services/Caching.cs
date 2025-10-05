@@ -123,11 +123,40 @@ namespace renjibackend.Services
         }
 
 
+        // API Function Controller for Getting Top Users by how many accident they report
+        public async Task<object> GetTopUsersbyReports()
+        {
+            DateTime now = DateTime.Now;
+
+            int month = now.Month;
+            int year = now.Year;
+
+            if (cache.TryGetValue("getTopUsersbyReports", out List<object> cachedData))
+            {
+                return cachedData;
+            }
 
 
+            using (IRSDbContext db = new IRSDbContext())
+            {
 
+                var query = await (from ir in db.IncidentReports
+                                  join u in db.Users on ir.ReportedBy equals u.Id
+                                  where ir.ReportedDate.Month == month && ir.ReportedDate.Year == year
+                                  group ir by u.Id into g
+                                  select new
+                                  {
+                                      Name = db.Users.Where(u => u.Id == g.Key).Select(n =>
+                                         n.FirstName + " " + n.LastName + ", " + db.Departments.Where(u => u.Id == n.DepartmentId).Select(n => n.Name).FirstOrDefault()
+                                       ).FirstOrDefault(),
+                                      Count = g.Count()
+                                  }
+                                  ).OrderByDescending(o => o.Count).ToListAsync();
 
-
+                cache.Set("getTopUsersbyReports", query, TimeSpan.FromSeconds(30));
+                return query;
+            }
+        }
 
 
         public async Task<object> GetSummaryReportsBarChart_1Caching()
