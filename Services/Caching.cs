@@ -69,7 +69,9 @@ namespace renjibackend.Services
                     Description = n.Description,
                     Location = n.Location,
                     ReportedDate = n.ReportedDate,
-                    ReportedBy = db.Users.Where(u => u.Id == n.ReportedBy).Select(n => n.FirstName + ' ' + n.LastName).FirstOrDefault(),
+                    ReportedBy = db.Users.Where(u => u.Id == n.ReportedBy).Select(n => n.FirstName + ' ' + n.LastName + ',' + ' ' +                                         
+                                 db.Departments.Where(u => u.Id == n.DepartmentId).Select(n => n.Name).FirstOrDefault()                 
+                    ).FirstOrDefault(),
                     Status = n.Status == 10 ? "Open" :
                      n.Status == 20 ? "In Progress" :
                      n.Status == 30 ? "Resolved" : ""
