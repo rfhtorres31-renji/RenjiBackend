@@ -282,6 +282,7 @@ namespace renjibackend.Services
                 var aggregatedReport = await (from ap in db.ActionPlans
                                               join mt in db.MaintenanceTeams
                                                   on ap.MaintenanceStaffId equals mt.Id
+                                              where ap.Status == 30
                                               group ap by mt.Name into g
                                               select new
                                               {
