@@ -11,7 +11,7 @@ public partial class ActionPlan
 
     public int MaintenanceStaffId { get; set; }
 
-    public string ActionDetail { get; set; } = null!;
+    public string ActionDetail { get; set; } = string.Empty;
 
     public DateTime DueDate { get; set; }
 
