@@ -75,7 +75,9 @@ namespace renjibackend.APIControllers
             {
                 response.success = false;
                 response.message = "Internal Server Error";
-                response.details = err.Message;
+                response.details = err.InnerException != null 
+        ? err.InnerException.Message 
+        : err.Message;
 
                 return StatusCode(500, response);
             }
