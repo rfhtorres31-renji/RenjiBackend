@@ -98,7 +98,7 @@ namespace renjibackend.Services
                     response.success = false;
                     response.message = "Conflict";
                     response.details = "User doesn't exist";
-                    response.httpResponse = 409; // Conflict
+                    response.httpResponse = 401; // Conflict
 
                     return response;
                 }
@@ -122,7 +122,7 @@ namespace renjibackend.Services
                 }
                 else
                 {
-                    response.success = true;
+                    response.success = false;
                     response.message = "Error";
                     response.details = "Invalid User Email/Password";
                     response.httpResponse = 409;

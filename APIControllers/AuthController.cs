@@ -61,6 +61,7 @@ namespace renjibackend.APIControllers
         
         }
 
+
         // For User Login
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request, bool rememberMe)
@@ -88,6 +89,10 @@ namespace renjibackend.APIControllers
                 else if (result.httpResponse == 500)
                 {
                     return BadRequest(result.message);
+                }
+                else if(result.httpResponse == 401)
+                {
+                    return Unauthorized(result.message);
                 }
             }
 
