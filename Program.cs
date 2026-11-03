@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using renjibackend.Data;
+using renjibackend.Interfaces;
 using renjibackend.Services;
 using renjibackend.Utility;
 using System.Text;
@@ -48,6 +49,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 
+builder.Services.AddScoped<IUserRepository, SQLServerUserRepository>(); // Implement SQLServerUserRepository
 builder.Services.AddScoped<PasswordHashing>();
 builder.Services.AddScoped<TokenGenerator>();
 builder.Services.AddScoped<Caching>();

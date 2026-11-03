@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using renjibackend.Utility;
+using renjibackend.Interfaces;
 
 
 namespace renjibackend.APIControllers
@@ -20,18 +21,18 @@ namespace renjibackend.APIControllers
     public class AuthController : ControllerBase
     {
 
-       private readonly IRSDbContext db;
-       private readonly PasswordHashing passwordService;
-       private Response response = new Response();
-       private readonly TokenGenerator generateToken;
+       private readonly IUserRepository _userRepo;
+       private readonly PasswordHashing _passwordService;     
+       private readonly TokenGenerator _generateToken;
 
-       public AuthController(IRSDbContext _db,
-                             PasswordHashing _passwordService,
-                             TokenGenerator _generateToken)
+
+       public AuthController(IUserRepository userRepo,
+                             PasswordHashing passwordService,
+                             TokenGenerator generateToken)
        {
-            this.db = _db;
-            this.passwordService = _passwordService;
-            this.generateToken = _generateToken;
+            this._userRepo = userRepo;
+            this._passwordService = passwordService;
+            this._generateToken = generateToken;
        }
       
 
@@ -39,8 +40,10 @@ namespace renjibackend.APIControllers
        [HttpPost("register")]
        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
        {   
+            Response response = new Response();
             try
-            {
+            {   
+
                 if (!ModelState.IsValid)
                 {
                     response.success = false;
@@ -49,11 +52,10 @@ namespace renjibackend.APIControllers
                     return BadRequest(response);
                 }
 
-                string hashedPassword = passwordService.HashPassword(request.Password);
-                Debug.WriteLine(hashedPassword);
+                string hashedPassword = _passwordService.HashPassword(request.Password);
 
                 // Check if Email already Exist
-                bool isEmailExist = await db.Users.AnyAsync(u => u.Email == request.Email); 
+                bool isEmailExist = await _userRepo.EmailExistAsync(request.Email);
 
                 if (isEmailExist)
                 {
@@ -61,7 +63,6 @@ namespace renjibackend.APIControllers
                     response.message = "Email already exist";
                     return Conflict(response); // Exit the function if Email already exist
                 }
-
 
                 var newUser = new User
                 {
@@ -74,8 +75,8 @@ namespace renjibackend.APIControllers
                     UpdatedAt = DateTime.Now,
                 };
 
-                db.Users.Add(newUser);
-                await db.SaveChangesAsync();
+                await _userRepo.AddUserAsync(newUser);
+                await _userRepo.SaveChangesAsync();
 
                 response.success = true;
                 response.message = "User Registered Successfully";
@@ -97,9 +98,12 @@ namespace renjibackend.APIControllers
         // For User Login
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request, bool rememberMe)
-        {
+        {  
+           Response response = new Response();
+
            try
-           {
+           {   
+               
                if (!ModelState.IsValid)
                {
                  response.success = false;
@@ -109,7 +113,7 @@ namespace renjibackend.APIControllers
                }
 
                 // Check if User exist
-                bool isUserExist = await db.Users.AnyAsync(u => u.Email == request.Email);
+                bool isUserExist = await _userRepo.EmailExistAsync(request.Email);
 
                 if (!isUserExist)
                 {
@@ -119,19 +123,19 @@ namespace renjibackend.APIControllers
                     return Conflict(response);
                 }
 
-                string hashedPassword = await db.Users.Where(u => u.Email == request.Email).Select(n=>n.Password).FirstOrDefaultAsync() ?? "";
+                string hashedPassword = await _userRepo.GetHashedPassword(request.Email);
 
-                PasswordVerificationResult passwordMatchObj = (PasswordVerificationResult)passwordService.VerifyPassword(hashedPassword, request.Password);
+                PasswordVerificationResult passwordMatchObj = (PasswordVerificationResult)_passwordService.VerifyPassword(hashedPassword, request.Password);
 
                 if (passwordMatchObj == PasswordVerificationResult.Success)
                 {
-                    int userID = await db.Users.Where(u => u.Email == request.Email).Select(n => n.Id).FirstOrDefaultAsync();
-                    string email = await db.Users.Where(u => u.Email == request.Email).Select(n => n.Email).FirstOrDefaultAsync() ?? "";
-                    string firstname = await db.Users.Where(u => u.Email == request.Email).Select(n => n.FirstName).FirstOrDefaultAsync() ?? "";
-                    string lastname = await db.Users.Where(u => u.Email == request.Email).Select(n => n.LastName).FirstOrDefaultAsync() ?? "";
+                    int userID = await _userRepo.GetUserId(request.Email);
+                    string email = await _userRepo.GetEmail(request.Email);
+                    string firstname = await _userRepo.GetFirstName(request.Email);
+                    string lastname = await _userRepo.GetLastName(request.Email);
                     string fullname = firstname + ' ' + lastname;
 
-                    var token = generateToken.GenerateToken(userID.ToString(), email, fullname, rememberMe);
+                    var token = _generateToken.GenerateToken(userID.ToString(), email, fullname, rememberMe);
 
                     response.success = true;
                     response.message = "Success";
