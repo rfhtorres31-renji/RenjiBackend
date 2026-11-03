@@ -5,6 +5,7 @@
         public bool success { get; set; } 
         public string message { get; set; }
         public object details { get; set; }
+        public int httpResponse { get; set; }
 
     }
 }
