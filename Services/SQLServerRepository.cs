@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using renjibackend.Data;
 using renjibackend.Interfaces;
@@ -8,6 +7,9 @@ using System;
 using System.Data;
 using System.Threading.Tasks;
 
+
+// Created using Single-Responsibility Principle
+// This focuses only on communicating on SQL Server 
 
 namespace renjibackend.Services
 {

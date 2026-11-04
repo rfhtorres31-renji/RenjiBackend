@@ -49,8 +49,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddScoped<Authentication>();
-builder.Services.AddScoped<IUserRepository, SQLServerUserRepository>(); // Implement SQLServerUserRepository
-builder.Services.AddScoped<PasswordHashing>();
+builder.Services.AddScoped<IUserRepository, SQLServerUserRepository>();
+builder.Services.AddScoped<IPasswordHashing, PasswordHashing>();
+builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
 builder.Services.AddScoped<TokenGenerator>();
 builder.Services.AddScoped<Caching>();
 builder.Services.AddMemoryCache();

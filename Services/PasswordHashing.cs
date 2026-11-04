@@ -1,9 +1,13 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using renjibackend.Interfaces;
+using System.Threading.Tasks;
 
+// Created using Single-Responsibility Principle
+// This focuses only on hashing password
 
 namespace renjibackend.Services
 {
-    public class PasswordHashing
+    public class PasswordHashing : IPasswordHashing
     {
 
         private readonly PasswordHasher<object> hasher = new PasswordHasher<object>();
@@ -23,7 +27,6 @@ namespace renjibackend.Services
 
             return result;
         }
-
 
     }
 }
