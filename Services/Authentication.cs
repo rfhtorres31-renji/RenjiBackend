@@ -17,15 +17,15 @@ namespace renjibackend.Services
 {
     public class Authentication
     {
-        private readonly IUserRepository _userRepo;
+        private readonly IAuthRepository _userRepo;
         private readonly IPasswordHashing _passwordService;
         private readonly ITokenGenerator _generateToken;
 
 
 
-        public Authentication(IUserRepository userRepo,
-                             IPasswordHashing passwordService,
-                             ITokenGenerator generateToken)
+        public Authentication(IAuthRepository userRepo,
+                              IPasswordHashing passwordService,
+                              ITokenGenerator generateToken)
         {
             this._userRepo = userRepo;
             this._passwordService = passwordService;

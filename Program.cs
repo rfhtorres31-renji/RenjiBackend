@@ -48,8 +48,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// Dependency Injections
 builder.Services.AddScoped<Authentication>();
-builder.Services.AddScoped<IUserRepository, SQLServerUserRepository>();
+builder.Services.AddScoped<IAuthRepository, SQLServerUserRepository>();
+builder.Services.AddScoped<ICacheRepository, SQLServerUserRepository>();
 builder.Services.AddScoped<IPasswordHashing, PasswordHashing>();
 builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
 builder.Services.AddScoped<TokenGenerator>();
