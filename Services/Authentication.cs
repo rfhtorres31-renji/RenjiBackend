@@ -10,19 +10,22 @@ using System;
 using System.Threading.Tasks;
 
 
+// Created using Single-Responsibility Principle
+// This authentication service focuses only on handling User Authentication
+
 namespace renjibackend.Services
 {
     public class Authentication
     {
-        private readonly IUserRepository _userRepo;
-        private readonly PasswordHashing _passwordService;
-        private readonly TokenGenerator _generateToken;
+        private readonly IAuthRepository _userRepo;
+        private readonly IPasswordHashing _passwordService;
+        private readonly ITokenGenerator _generateToken;
 
 
 
-        public Authentication(IUserRepository userRepo,
-                             PasswordHashing passwordService,
-                             TokenGenerator generateToken)
+        public Authentication(IAuthRepository userRepo,
+                              IPasswordHashing passwordService,
+                              ITokenGenerator generateToken)
         {
             this._userRepo = userRepo;
             this._passwordService = passwordService;
@@ -106,6 +109,7 @@ namespace renjibackend.Services
                 User user = await _userRepo.GetUserByEmailAsync(request.Email);
 
                 PasswordVerificationResult passwordMatchObj = (PasswordVerificationResult)_passwordService.VerifyPassword(user.Password, request.Password);
+
 
                 if (passwordMatchObj == PasswordVerificationResult.Success)
                 {

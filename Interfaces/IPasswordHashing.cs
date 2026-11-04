@@ -9,12 +9,12 @@ using System.Threading.Tasks;
 
 namespace renjibackend.Interfaces
 {
-    public interface IUserRepository
+    public interface IPasswordHashing
     {
-        Task<bool> EmailExistAsync(string email);
-        Task AddUserAsync(User user);
-        Task SaveChangesAsync();
-        Task<User> GetUserByEmailAsync(string email);
+        string HashPassword(string plainedPassword);
+        object VerifyPassword(string hashedPassword, string userPassword);
     }
 
 }
+
+

@@ -2,12 +2,15 @@
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using renjibackend.Interfaces;
+using System.Threading.Tasks;
 
 
-
+// Created using Single-Responsibility Principle
+// This focuses only on token generation
 namespace renjibackend.Utility
 {
-    public class TokenGenerator
+    public class TokenGenerator : ITokenGenerator
     {
 
         private readonly IConfiguration _configuration; // This is for accessing key-value properties appsettings.json

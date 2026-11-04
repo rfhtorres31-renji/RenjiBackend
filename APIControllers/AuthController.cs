@@ -14,6 +14,12 @@ using System.Linq;
 using System.Threading.Tasks;
 
 
+// ==== Updated November 3 2026 ==== // 
+// Refactored by Ronnier Torres
+// Redesigned using Single-Responsibility Principle
+// This authentication controller focuses only on one single responsibility which handles HTTP Request/Responses (Presentation Layer)
+
+
 namespace renjibackend.APIControllers
 {
     [ApiController]
@@ -58,7 +64,6 @@ namespace renjibackend.APIControllers
             }
 
             return Ok(result);
-        
         }
 
 
