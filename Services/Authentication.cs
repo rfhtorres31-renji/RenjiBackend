@@ -18,22 +18,24 @@ namespace renjibackend.Services
     public class Authentication
     {
         private readonly IAuthRepository _userRepo;
+        private readonly ITransaction _userTransaction;
         private readonly IPasswordHashing _passwordService;
         private readonly ITokenGenerator _generateToken;
-
-
+        
 
         public Authentication(IAuthRepository userRepo,
                               IPasswordHashing passwordService,
+                              ITransaction _userTransaction,
                               ITokenGenerator generateToken)
         {
             this._userRepo = userRepo;
             this._passwordService = passwordService;
             this._generateToken = generateToken;
+            this._userTransaction = _userTransaction;
         }
 
 
-        public async Task<Response> RegisterUser(RegisterRequest request)
+        public async Task<Response> RegisterUser(RegisterRequest request, CancellationToken cancellationToken)
         {
             Response response = new Response();
 
@@ -42,7 +44,7 @@ namespace renjibackend.Services
                 string hashedPassword = _passwordService.HashPassword(request.Password);
 
                 // Check if Email already Exist
-                bool isEmailExist = await _userRepo.EmailExistAsync(request.Email);
+                bool isEmailExist = await _userRepo.EmailExistAsync(request.Email, cancellationToken);
 
                 if (isEmailExist)
                 {
@@ -52,6 +54,9 @@ namespace renjibackend.Services
 
                     return response;
                 }
+
+                // If email doesnt exist, open a DB Transaction for adding the new user
+                await _userTransaction.BeginTransactionAsync(cancellationToken);
 
                 var newUser = new User
                 {
@@ -64,15 +69,19 @@ namespace renjibackend.Services
                     UpdatedAt = DateTime.Now,
                 };
 
-                await _userRepo.AddUserAsync(newUser);
-                await _userRepo.SaveChangesAsync();
+                await _userRepo.AddUserAsync(newUser, cancellationToken);
+                await _userTransaction.SaveChangesAsync(cancellationToken);
+
+                await _userTransaction.CommitTransactionAsync(cancellationToken);
 
                 response.success = true;
                 response.message = "User Added Successfully";
                 response.httpResponse = 201; // User Created/Added
             }
             catch(Exception err)
-            {
+            {   
+                await _userTransaction.RollbackTransactionAsync(cancellationToken);
+
                 response.success = false;
                 response.message = "Internal Server Error";
                 response.details = err.Message;
@@ -85,16 +94,15 @@ namespace renjibackend.Services
         }
 
 
-        public async Task<Response> LoginUser(LoginRequest request, bool rememberMe)
+        public async Task<Response> LoginUser(LoginRequest request, bool rememberMe, CancellationToken cancellationToken)
         {
 
             Response response = new Response();
 
             try
             {
-
                 // Check if User exist
-                bool isUserExist = await _userRepo.EmailExistAsync(request.Email);
+                bool isUserExist = await _userRepo.EmailExistAsync(request.Email, cancellationToken);
 
                 if (!isUserExist)
                 {
@@ -106,7 +114,7 @@ namespace renjibackend.Services
                     return response;
                 }
 
-                User user = await _userRepo.GetUserByEmailAsync(request.Email);
+                User user = await _userRepo.GetUserByEmailAsync(request.Email, cancellationToken);
 
                 PasswordVerificationResult passwordMatchObj = (PasswordVerificationResult)_passwordService.VerifyPassword(user.Password, request.Password);
 

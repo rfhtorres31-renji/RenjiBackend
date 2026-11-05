@@ -9,13 +9,12 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using renjibackend.DTO;
 
-
 // Created using Single-Responsibility Principle
 // This focuses only on communicating on SQL Server 
 
 namespace renjibackend.Services
 {
-    public class SQLServerUserRepository : IAuthRepository, ICacheRepository
+    public class SQLServerUserRepository : IAuthRepository, ICacheRepository, ITransaction
     {
 
         private readonly IRSDbContext _db;
@@ -27,30 +26,42 @@ namespace renjibackend.Services
         }
 
 
-        public async Task<bool> EmailExistAsync(string email)
+        public async Task<bool> EmailExistAsync(string email, CancellationToken cancellationToken)
         {
-            return await _db.Users.AnyAsync(u => u.Email == email);
+            return await _db.Users.AsNoTracking().AnyAsync(u=>u.Email == email, cancellationToken);
         }
 
 
-        public async Task AddUserAsync(User user)
+        public async Task AddUserAsync(User user, CancellationToken cancellationToken)
         {
-            await _db.Users.AddAsync(user);
+            await _db.Users.AddAsync(user, cancellationToken);
         }
 
 
-        public async Task SaveChangesAsync()
+        public async Task SaveChangesAsync(CancellationToken cancellationToken)
         {
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(cancellationToken);
         }
 
-
-        public async Task<User> GetUserByEmailAsync(string email)
+        public async Task BeginTransactionAsync(CancellationToken cancellationToken)
         {
-            return await _db.Users.Where(u => u.Email == email).FirstOrDefaultAsync();
+             await _db.Database.BeginTransactionAsync(cancellationToken);
+        }
+        
+        public async Task CommitTransactionAsync(CancellationToken cancellationToken)
+        {
+             await _db.Database.CommitTransactionAsync(cancellationToken);
         }
 
+        public async Task RollbackTransactionAsync(CancellationToken cancellationToken)
+        {
+             await _db.Database.RollbackTransactionAsync(cancellationToken);
+        }
 
+        public async Task<User> GetUserByEmailAsync(string email, CancellationToken cancellationToken)
+        {
+            return await _db.Users.AsNoTracking().Where(u => u.Email == email).FirstOrDefaultAsync(cancellationToken);
+        }
 
         public async Task<object> GetIncidentReportsList()
         {
@@ -99,7 +110,7 @@ namespace renjibackend.Services
                                   ).FirstOrDefault(),
                                   Count = g.Count()
                               }
-                              ).OrderByDescending(o => o.Count).ToListAsync();
+                              ).OrderByDescending(o => o.Count).AsNoTracking().ToListAsync();
             }
                 
         }
@@ -126,7 +137,7 @@ namespace renjibackend.Services
                                          ).FirstOrDefault(),
                                         Count = g.Count()
                                     }
-                                  ).OrderByDescending(o => o.Count).ToListAsync();
+                                  ).OrderByDescending(o => o.Count).AsNoTracking().ToListAsync();
 
             }
 
@@ -147,7 +158,7 @@ namespace renjibackend.Services
                                  x = g.Count() // Total per Accident Types
                              };
 
-                var result1 = await query1.OrderByDescending(x => x.y).ToListAsync();
+                var result1 = await query1.OrderByDescending(x => x.y).AsNoTracking().ToListAsync();
 
                 return result1;
             }
@@ -170,7 +181,7 @@ namespace renjibackend.Services
                                  label = db.Departments.Where(u => u.Id == g.Key).Select(n => n.Name).FirstOrDefault(),
                                  value = g.Count(),
                                  percentage = ((double)g.Count() / totalCount * 100).ToString("0.0") + "%"
-                             }).ToListAsync();
+                             }).AsNoTracking().ToListAsync();
 
                    return query;
              }
@@ -184,7 +195,7 @@ namespace renjibackend.Services
                                          .Include(i => i.ActionPlan)
                                          .Include(i => i.Department)
                                          .Include(i => i.Accident)
-                                        .Where(u => u.ActionPlan.Status != 30).ToListAsync();
+                                        .Where(u => u.ActionPlan.Status != 30).AsNoTracking().ToListAsync();
 
                 int totalPendingPlans = pendingActionPlans.Count();
 
@@ -192,7 +203,7 @@ namespace renjibackend.Services
                                               .Include(i => i.ActionPlan)
                                               .Include(i => i.Department)
                                               .Include(i => i.Accident)
-                                              .Where(u => u.ActionPlan.Status == 30).ToListAsync();
+                                              .Where(u => u.ActionPlan.Status == 30).AsNoTracking().ToListAsync();
 
 
                 int totalCompletedPlans = completedActionPlans.Count();
@@ -201,7 +212,7 @@ namespace renjibackend.Services
                 int totalActionPlans = db.IncidentReports
                                       .Include(i => i.ActionPlan)
                                       .Include(i => i.Department)
-                                      .Include(i => i.Accident).Count();
+                                      .Include(i => i.Accident).AsNoTracking().Count();
 
 
 
@@ -227,7 +238,7 @@ namespace renjibackend.Services
                                               {
                                                   count = g.Count(),
                                                   team = g.Key
-                                              }).ToListAsync();
+                                              }).AsNoTracking().ToListAsync();
 
                 var barChartObj = new
                 {
@@ -248,6 +259,7 @@ namespace renjibackend.Services
                         .GroupBy(a => a.CompletedDate.Value.Date)
                         .Select(g => new { date = g.Key, completed = g.Count() })
                         .OrderBy(m => m.date)
+                        .AsNoTracking()
                         .ToListAsync();
 
                    var pendingOverTime = await db.ActionPlans
@@ -255,6 +267,7 @@ namespace renjibackend.Services
                         .GroupBy(a => a.DueDate.Date)
                         .Select(g => new { date = g.Key, pending = g.Count() })
                         .OrderBy(m => m.date)
+                        .AsNoTracking()
                         .ToListAsync();
 
                     var lineChartObj = new

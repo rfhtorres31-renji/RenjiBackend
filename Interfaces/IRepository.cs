@@ -8,13 +8,20 @@ using System.Data;
 using System.Threading.Tasks;
 
 namespace renjibackend.Interfaces
-{
+{   
+    public interface ITransaction
+    {
+        Task BeginTransactionAsync(CancellationToken cancellationToken);
+        Task RollbackTransactionAsync(CancellationToken cancellationToken);
+        Task CommitTransactionAsync(CancellationToken cancellationToken);
+        Task SaveChangesAsync(CancellationToken cancellationToken);
+    }
+   
     public interface IAuthRepository
     {
-        Task<bool> EmailExistAsync(string email);
-        Task AddUserAsync(User user);
-        Task SaveChangesAsync();
-        Task<User> GetUserByEmailAsync(string email);
+        Task<bool> EmailExistAsync(string email, CancellationToken cancellationToken);
+        Task AddUserAsync(User user, CancellationToken cancellationToken);     
+        Task<User> GetUserByEmailAsync(string email, CancellationToken cancellationToken);
     }
 
     public interface ICacheRepository

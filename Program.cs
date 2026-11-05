@@ -52,6 +52,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddScoped<Authentication>();
 builder.Services.AddScoped<IAuthRepository, SQLServerUserRepository>();
 builder.Services.AddScoped<ICacheRepository, SQLServerUserRepository>();
+builder.Services.AddScoped<ITransaction, SQLServerUserRepository>();
 builder.Services.AddScoped<IPasswordHashing, PasswordHashing>();
 builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
 builder.Services.AddScoped<TokenGenerator>();

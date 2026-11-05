@@ -19,7 +19,6 @@ using System.Threading.Tasks;
 // Redesigned using Single-Responsibility Principle
 // This authentication controller focuses only on one single responsibility which handles HTTP Request/Responses (Presentation Layer)
 
-
 namespace renjibackend.APIControllers
 {
     [ApiController]
@@ -37,7 +36,7 @@ namespace renjibackend.APIControllers
 
         // For User Registration
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
@@ -49,7 +48,7 @@ namespace renjibackend.APIControllers
                 });
             }
 
-            Response result = await _authService.RegisterUser(request);
+            Response result = await _authService.RegisterUser(request, cancellationToken);
 
             if(!result.success)
             {
@@ -69,7 +68,7 @@ namespace renjibackend.APIControllers
 
         // For User Login
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request, bool rememberMe)
+        public async Task<IActionResult> Login([FromBody] LoginRequest request, bool rememberMe, CancellationToken cancellationToken)
         {  
            Response response = new Response();
 
@@ -83,7 +82,7 @@ namespace renjibackend.APIControllers
                 });
             }
 
-            Response result = await _authService.LoginUser(request, rememberMe);
+            Response result = await _authService.LoginUser(request, rememberMe, cancellationToken);
 
             if (!result.success)
             {
